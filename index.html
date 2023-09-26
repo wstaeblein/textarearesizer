@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="pt">
+    <head>
+        <title>Textarea Height Component</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Open+Sans:wght@400&display=swap" rel="stylesheet">
+        <link rel="shortcut icon" type="image/png" href="favicon.png" />
+
+        <script src="textarearesizer.js"></script>
+        <style>
+            body {
+                font-family: 'Open Sans', sans-serif;
+                color: #0a4ba0;
+                font-size: 15px;
+            }
+
+            h1 {
+                font-family: 'Bungee', sans-serif;
+                text-transform: uppercase;
+                text-shadow: -1px -1px 0 #0a4ba0, 1px -1px 0 #0a4ba0, -1px 1px 0 #0a4ba0, 1px 1px 0 #0a4ba0;
+                font-size: 54px;
+                color: #fffffd;
+                margin: 0;
+                letter-spacing: 3px;
+            }
+
+            main {
+                max-width: 700px;
+                width: 100%;
+                margin: 20px auto;
+            }
+
+            main > div {
+                margin-top: -3.4em;
+            }
+
+            button {
+                border: 1px solid #0a4ba0;
+                background-color: #bbb7ff;
+                color: #fff;
+                text-transform: uppercase;
+                font-size: 12px;
+                font-weight: bold;
+                cursor: pointer;
+                text-shadow: 1px 1px 0 #222;
+                padding: 3px 10px 2px;
+                transition: all 0.4s ease;
+            }
+                button:hover {
+                    background-color: #0a4ba0;
+                    color: #fff;
+                }
+
+            textarea {
+                width: calc(100% - 22px);
+                min-height: 70px;
+                padding: 5px 10px;
+                font-size: 18px;
+                color: #0a4ba0;
+                margin-top: 5px;
+                background-color: #ffffe1;
+            }
+
+            div#txtbox {
+                padding: 2px 5px;
+                border: 1px solid #eee;
+                outline: none;
+                display: inline-block;
+                width: 244px;
+                white-space: nowrap;
+                overflow: hidden;
+            }
+
+            input[type=range] {
+                margin-top: 4px;
+                width: 200px;
+            }
+
+
+            select {
+                padding: 1px;
+            }
+
+            nav {
+                margin: 20px 0;
+                display: flex;
+                gap: 10px;
+            }    
+            
+            h5 {
+                font-size: 11px;
+                text-transform: uppercase;
+                margin: 0 0 5px;
+            }
+
+            .badge {
+                background-color: #0a4ba0;
+                color: #fff;
+                padding: 2px 8px 3px;
+                text-transform: uppercase;
+                font-size: 11px;
+                font-weight: bold;
+                letter-spacing: 1px;    
+                border-radius: 4px;            
+            }
+
+            .divide {
+                display: flex;
+                justify-content: space-between;
+                gap: 10px;
+            }
+
+            hr {
+                border: none;
+                height: 1px;
+                background-color: #dedede;
+            }
+
+            #help.hide > div:first-child {
+                display: none;
+            }
+
+            #help.hide > div:last-child {
+                display: block;
+            }
+
+            #help > div:last-child {
+                display: none;
+            }            
+
+            .showbtn {
+                margin-top: .3em;
+            }
+
+        </style>
+    </head>
+    <body>
+        <main>
+            <h1>Textarea Resizer</h1>
+
+            <div>
+                <p><b>Javascript class to automatically adjust a textarea's height according to it's contents.</b></p>
+                <div id="help" class="hide">
+                    <div>
+                        <p>Enter text in the textarea below and see it adjust to it's content.</p>
+                        <p>The KILL and ACTIVATE buttons will remove or insert the class' functionality in the textarea.</p>
+                        <p>The max height slider let's you adjust a maximum height for the textarea, so that when reached it shall no longer grow but provide scrollbars instead.</p>
+                        <p>The ROLL button will set a random width and height to the textarea and the RESET button will reset it to what it was before.</p>
+                        <div class="hidebtn"><button onclick="help()">Hide Help</button></div>
+                        <hr />                            
+                    </div>
+                    <div><button class="showbtn" onclick="help()">Show Help</button></div>           
+                </div>
+                
+                <nav>
+                    <div>
+                        <h5>Resizer</h5>
+                        <button onclick="ToggleResizer()" id="activate">Activate</button>
+                        <button onclick="ToggleResizer()" id="kill">Kill</button>
+                    </div>         
+
+                    <div>
+                        <h5 class="divide">
+                            <span>Adjust Max Height</span>
+                            <span id="maxheightval"></span>
+                        </h5>
+                        <input type="range" id="maxheight" min="70" max="501" value="200" oninput="setMaxHeight()" />
+                    </div>
+                    
+                    <div>
+                        <h5>Random Dimension</h5>
+                        <button onclick="redim()">Roll</button>
+                        <button onclick="reset()">Reset</button>
+                    </div>
+
+                </nav>
+
+                <div>
+                    <span id="status" class="badge"></span>
+                    <span id="taHeight"></span>
+                </div>
+                <textarea id="txt" spellcheck="false"></textarea>
+                
+                <br><br>
+            </div>
+        </main>
+
+        <script>
+            let taResizer, taHeight, isActive = true, maxheightval, oldHeight,
+                status, activate, kill, maxHeight, textarea;
+
+            function ToggleResizer() {
+                isActive = !isActive;
+                
+                if (isActive) {
+                    taResizer.destroy();
+                    taResizer = null;
+                    status.textContent = 'Inactive';
+                    activate.style.display = 'inline-block';
+                    kill.style.display = 'none';
+                } else {
+                    taResizer = new textAreaResizer(document.getElementById('txt'));
+                    status.textContent = 'Active';
+                    kill.style.display = 'inline-block';
+                    activate.style.display = 'none';                    
+                }
+            }
+
+            function setMaxHeight() { console.log(maxHeight.value, maxHeight.max)
+                if (+maxHeight.value < +maxHeight.max) {
+                    textarea.style.maxHeight = maxHeight.value + 'px';
+                    maxheightval.textContent = maxHeight.value + 'px';                    
+                } else {
+                    textarea.style.removeProperty('max-height');
+                    maxheightval.textContent = 'Free';
+                }
+                taResizer.update();
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {      
+                textarea = document.getElementById('txt');
+                maxHeight = document.getElementById('maxheight');
+                status = document.getElementById('status');
+                activate = document.getElementById('activate');
+                kill = document.getElementById('kill');
+                maxheightval = document.getElementById('maxheightval');
+                ToggleResizer();
+                setMaxHeight();
+            });
+
+            function redim() {
+                oldHeight = textarea.style.height;
+                textarea.style.height = random(70, 500) + 'px';
+                textarea.style.height = random(250, 700) + 'px';
+            }
+
+            function reset() {
+                if (oldHeight) {
+                    textarea.style.height = oldHeight;
+                    textarea.style.width = '700px';
+                }
+            }
+
+            function random(min, max) {
+                return Math.random() * (max - min) + min;
+            }
+
+            function help() {
+                document.getElementById('help').classList.toggle('hide');
+            }
+        </script>
+    </body>
+</html>
